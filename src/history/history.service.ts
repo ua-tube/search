@@ -18,7 +18,7 @@ export class HistoryService implements OnApplicationBootstrap {
     this.index = this.meiliSearch.index<VideosIndex>('videos');
   }
 
-  async updateVideoMetrics(payload: UpdateVideoMetrics) {
+  async updateVideoViewsMetrics(payload: UpdateVideoMetrics) {
     try {
       const video = await this.index.getDocument(payload.videoId);
 

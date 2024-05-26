@@ -8,12 +8,12 @@ import { ackMessage } from '../common/utils';
 export class HistoryController {
   constructor(private readonly historyService: HistoryService) {}
 
-  @EventPattern('update_video_metrics')
-  async handleUpdateVideoMetrics(
+  @EventPattern('update_video_views_metrics')
+  async handleUpdateVideoViewsMetrics(
     @Payload() payload: UpdateVideoMetrics,
     @Ctx() context: RmqContext,
   ) {
-    await this.historyService.updateVideoMetrics(payload);
+    await this.historyService.updateVideoViewsMetrics(payload);
     ackMessage(context);
   }
 }
