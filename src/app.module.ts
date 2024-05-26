@@ -17,9 +17,9 @@ import { HealthModule } from './health/health.module';
       isGlobal: true,
       validationSchema: Joi.object({
         NODE_ENV: Joi.valid('development', 'production', 'test').required(),
-        CLIENT_URL: Joi.string().required(),
         HTTP_HOST: Joi.string().required(),
         HTTP_PORT: Joi.number().required(),
+        CLIENT_URL: Joi.string().required(),
         RABBITMQ_URL: Joi.string().required(),
         RABBITMQ_QUEUE: Joi.string().required(),
         MEILISEARCH_URL: Joi.string().uri().required(),

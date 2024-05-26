@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsNumber, Max, Min } from "class-validator";
-import { Transform } from "class-transformer";
+import { IsNotEmpty, IsNumber, Max, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class SearchTrendingTagsDto {
   @IsNotEmpty()
