@@ -1,11 +1,11 @@
-import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CreateVideoDto, UnregisterVideo, UpdateVideoDto } from './dto';
 import { InjectMeiliSearch } from 'nestjs-meilisearch';
 import { Index, Meilisearch } from 'meilisearch';
 import { VideosIndex } from '../search/interfaces';
 
 @Injectable()
-export class VideoManagerService implements OnApplicationBootstrap {
+export class VideoManagerService implements OnModuleInit {
   private readonly logger = new Logger(VideoManagerService.name);
   private index: Index<VideosIndex>;
 
@@ -14,11 +14,13 @@ export class VideoManagerService implements OnApplicationBootstrap {
     private readonly meiliSearch: Meilisearch,
   ) {}
 
-  onApplicationBootstrap(): void {
+  onModuleInit(): void {
     this.index = this.meiliSearch.index<VideosIndex>('videos');
   }
 
   async createVideo(payload: CreateVideoDto) {
+    this.logger.log(`Video (${payload.id}) create is called`);
+
     await this.index.addDocuments([
       {
         ...payload,
@@ -29,6 +31,8 @@ export class VideoManagerService implements OnApplicationBootstrap {
   }
 
   async updateVideo(payload: UpdateVideoDto) {
+    this.logger.log(`Video (${payload.id}) update is called`);
+
     try {
       const video = await this.index.getDocument(payload.id);
 
@@ -46,6 +50,8 @@ export class VideoManagerService implements OnApplicationBootstrap {
   }
 
   async unregisterVideo(payload: UnregisterVideo) {
+    this.logger.log(`Video (${payload.videoId}) unregister is called`);
+
     try {
       const video = await this.index.getDocument(payload.videoId);
 

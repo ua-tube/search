@@ -7,7 +7,10 @@ export interface VideosIndex {
   previewThumbnailUrl: string;
   lengthSeconds: number;
   creatorId: string;
-  metrics: { viewsCount: string };
+  metrics: {
+    viewsCount: string;
+    viewsCountUpdatedAt?: Date;
+  };
   status: string;
   visibility: string;
   createdAt: Date;

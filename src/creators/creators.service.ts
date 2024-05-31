@@ -1,11 +1,11 @@
-import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { UpsertCreatorDto } from './dto';
 import { InjectMeiliSearch } from 'nestjs-meilisearch';
 import { Index, Meilisearch } from 'meilisearch';
 import { CreatorsIndex } from '../search/interfaces';
 
 @Injectable()
-export class CreatorsService implements OnApplicationBootstrap {
+export class CreatorsService implements OnModuleInit {
   private readonly logger = new Logger(CreatorsService.name);
   private index: Index<CreatorsIndex>;
 
@@ -14,7 +14,7 @@ export class CreatorsService implements OnApplicationBootstrap {
     private readonly meiliSearch: Meilisearch,
   ) {}
 
-  onApplicationBootstrap(): void {
+  onModuleInit(): void {
     this.index = this.meiliSearch.index<CreatorsIndex>('creators');
   }
 
@@ -22,7 +22,7 @@ export class CreatorsService implements OnApplicationBootstrap {
     try {
       await this.index.getDocument(payload.id);
       await this.index.updateDocuments([payload]);
-      this.logger.log(`Creator (${payload.id}) is updated`);
+      this.logger.log(`Creator (${payload.id}) update is enqueued`);
     } catch {
       await this.index.addDocuments([
         {
@@ -32,7 +32,7 @@ export class CreatorsService implements OnApplicationBootstrap {
           thumbnailUrl: payload.thumbnailUrl,
         },
       ]);
-      this.logger.log(`Creator (${payload.id}) is created`);
+      this.logger.log(`Creator (${payload.id}) create is enqueued`);
     }
   }
 }

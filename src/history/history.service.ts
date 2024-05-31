@@ -19,11 +19,18 @@ export class HistoryService implements OnApplicationBootstrap {
   }
 
   async updateVideoViewsMetrics(payload: UpdateVideoMetrics) {
+    this.logger.log('Video metrics update is called');
+
     try {
       const video = await this.index.getDocument(payload.videoId);
 
       if (video.status === 'Unregistered') {
         this.logger.warn(`Video (${payload.videoId} is unregistered`);
+        return;
+      }
+
+      if (payload.updatedAt <= video.metrics?.viewsCountUpdatedAt) {
+        this.logger.warn('Video metrics update is too old, skip...');
         return;
       }
     } catch {
@@ -34,9 +41,13 @@ export class HistoryService implements OnApplicationBootstrap {
     await this.index.updateDocuments([
       {
         id: payload.videoId,
-        metrics: { viewsCount: `${payload.viewsCount}` },
+        metrics: {
+          viewsCount: `${payload.viewsCount}`,
+          viewsCountUpdatedAt: new Date(),
+        },
       },
     ]);
+
     this.logger.log(`Metrics update enqueued for video (${payload.videoId})`);
   }
 }
