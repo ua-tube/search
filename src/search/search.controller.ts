@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { PaginationDto, SearchByTagsDto, SearchDto } from './dto';
 
@@ -9,6 +9,14 @@ export class SearchController {
   @Get('latest')
   searchLatest(@Query() pagination: PaginationDto) {
     return this.searchService.searchLatest(pagination);
+  }
+
+  @Get('related/:videoId')
+  searchRelated(
+    @Param('videoId', ParseUUIDPipe) videoId: string,
+    @Query() pagination: PaginationDto
+    ) {
+    return this.searchService.searchRelated(videoId, pagination);
   }
 
   @Get()

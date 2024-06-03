@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 import { PaginationDto } from './dto';
 import { InjectMeiliSearch } from 'nestjs-meilisearch';
 import {
@@ -40,8 +40,11 @@ export class SearchService implements OnModuleInit {
         'proximity',
         'attribute',
         'sort',
+        'metrics.viewsCount:desc',
+        'createdAt:desc',
       ]),
     ]);
+
     return index;
   }
 
@@ -71,7 +74,7 @@ export class SearchService implements OnModuleInit {
   async searchLatest(pagination: PaginationDto) {
     const videoResponse = await this.videosIndex.search(null, {
       sort: ['createdAt:desc'],
-      filter: ["status != 'Unregistered'", "visibility = 'Public'"],
+      filter: ["status = 'Registered'", "visibility = 'Public'"],
       page: pagination?.page ?? 1,
       hitsPerPage: pagination?.perPage ?? 20,
       facets: ['tags'],
@@ -80,12 +83,55 @@ export class SearchService implements OnModuleInit {
     return this.mapCreatorsToVideosResponse(videoResponse);
   }
 
+  async searchRelated(videoId: string, pagination: PaginationDto) {
+    try {
+      const video = await this.videosIndex.getDocument(videoId);
+
+      const hashtagRegex = /(?:^|\s)(#\w+)(?=\s|$)/g;
+      const hashtags = [
+        ...(video.title.match(hashtagRegex) || []),
+        ...(video.description.match(hashtagRegex) || []),
+      ];
+
+      const tags = [
+        ...new Set([
+          ...hashtags.map((ht) => ht.trim().replace('#', '')),
+          ...video.tags.map((t) => t.trim()),
+        ]),
+      ];
+
+      const filter = [
+        "status != 'Registered'",
+        "visibility = 'Public'",
+        `id != ${videoId}`,
+      ];
+
+      if (tags.length > 0) {
+        filter.push(`tags IN [${tags.join(',')}]`);
+      } else {
+        filter.push(`creatorId = ${video.creatorId}`);
+      }
+
+      const videosResponse = await this.videosIndex.search(null, {
+        sort: ['createdAt:desc'],
+        filter,
+        page: pagination?.page ?? 1,
+        hitsPerPage: pagination?.perPage ?? 20,
+        facets: ['tags'],
+      });
+
+      return this.mapCreatorsToVideosResponse(videosResponse);
+    } catch {
+      throw new BadRequestException('Video not found');
+    }
+  }
+
   async searchByQuery(query: string, pagination: PaginationDto) {
     const videosResponse = await this.videosIndex.search(query, {
       page: pagination?.page ?? 1,
       hitsPerPage: pagination?.perPage ?? 20,
       facets: ['tags'],
-      filter: ["status != 'Unregistered'", "visibility = 'Public'"],
+      filter: ["status = 'Registered'", "visibility = 'Public'"],
     });
 
     return this.mapCreatorsToVideosResponse(videosResponse);
@@ -95,7 +141,7 @@ export class SearchService implements OnModuleInit {
     const videosResource = await this.videosIndex.getDocuments({
       filter: [
         `tags IN [${tags.map((tag) => tag.trim()).join(', ')}]`,
-        "status != 'Unregistered'",
+        "status = 'Registered'",
         "visibility = 'Public'",
       ],
       offset: ((pagination?.page ?? 1) - 1) * (pagination?.perPage ?? 20),
@@ -110,7 +156,7 @@ export class SearchService implements OnModuleInit {
   ) {
     const creatorsResponse = await this.creatorsIndex.getDocuments({
       filter: [
-        `id IN [${videoResource.results.map((result) => result.creatorId).join(', ')}]`,
+        `id IN [${videoResource.results.map((result) => result.creatorId).join(',')}]`,
       ],
     });
 
@@ -130,7 +176,7 @@ export class SearchService implements OnModuleInit {
   ) {
     const creatorsResponse = await this.creatorsIndex.getDocuments({
       filter: [
-        `id IN [${videosResponse.hits.map((hit) => hit.creatorId).join(', ')}]`,
+        `id IN [${videosResponse.hits.map((hit) => hit.creatorId).join(',')}]`,
       ],
     });
 

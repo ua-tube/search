@@ -27,6 +27,7 @@ export class VideoManagerService implements OnModuleInit {
         metrics: { viewsCount: '0' },
       },
     ]);
+
     this.logger.log(`Video (${payload.id}) create is enqueued`);
   }
 
