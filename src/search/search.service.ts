@@ -87,27 +87,14 @@ export class SearchService implements OnModuleInit {
     try {
       const video = await this.videosIndex.getDocument(videoId);
 
-      const hashtagRegex = /(?:^|\s)(#\w+)(?=\s|$)/g;
-      const hashtags = [
-        ...(video.title.match(hashtagRegex) || []),
-        ...(video.description.match(hashtagRegex) || []),
-      ];
-
-      const tags = [
-        ...new Set([
-          ...hashtags.map((ht) => ht.trim().replace('#', '')),
-          ...video.tags.map((t) => t.trim()),
-        ]),
-      ];
-
       const filter = [
-        "status != 'Registered'",
+        "status = 'Registered'",
         "visibility = 'Public'",
         `id != ${videoId}`,
       ];
 
-      if (tags.length > 0) {
-        filter.push(`tags IN [${tags.join(',')}]`);
+      if (video.tags.length > 0) {
+        filter.push(`tags IN [${video.tags.join(',')}]`);
       } else {
         filter.push(`creatorId = ${video.creatorId}`);
       }
