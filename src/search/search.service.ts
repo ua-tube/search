@@ -94,7 +94,7 @@ export class SearchService implements OnModuleInit {
       ];
 
       if (video.tags.length > 0) {
-        filter.push(`tags IN [${video.tags.join(',')}]`);
+        filter.push(`tags IN [${video.tags.join(',')}] OR creatorId = ${video.creatorId}`);
       } else {
         filter.push(`creatorId = ${video.creatorId}`);
       }
